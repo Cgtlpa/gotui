@@ -3,6 +3,7 @@ package gotui
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // Theme holds the color palette used by components.
@@ -140,7 +141,8 @@ func (l Layout) Apply(view string) string {
 }
 
 // scaleLine repeats each visible character n times while leaving ANSI escape
-// sequences untouched.
+// sequences untouched. Handles multi-byte UTF-8 characters correctly by
+// repeating runes, not bytes.
 func scaleLine(line string, n int) string {
 	var b strings.Builder
 	i := 0
@@ -159,10 +161,12 @@ func scaleLine(line string, n int) string {
 				i++
 			}
 		} else {
+			// Decode the next rune and repeat it n times.
+			r, size := utf8.DecodeRuneInString(line[i:])
 			for j := 0; j < n; j++ {
-				b.WriteByte(line[i])
+				b.WriteRune(r)
 			}
-			i++
+			i += size
 		}
 	}
 	return b.String()
@@ -185,10 +189,11 @@ func splitLines(s string) []string {
 	return lines
 }
 
-// visibleLen returns the number of visible characters in a string,
+// visibleLen returns the number of visible characters (runes) in a string,
 // stripping ANSI escape sequences.
 func visibleLen(s string) int {
-	var b strings.Builder
+	// Strip ANSI escape sequences first
+	var plain strings.Builder
 	i := 0
 	for i < len(s) {
 		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
@@ -200,11 +205,12 @@ func visibleLen(s string) int {
 				i++ // skip final byte
 			}
 		} else {
-			b.WriteByte(s[i])
+			plain.WriteByte(s[i])
 			i++
 		}
 	}
-	return b.Len()
+	// Count runes, not bytes, so multi-byte UTF-8 chars count as 1
+	return utf8.RuneCountInString(plain.String())
 }
 
 // padLine pads a line to width, centering if requested.
