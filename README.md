@@ -110,23 +110,37 @@ Each call adds a screen. `Run()` shows them one at a time.
 
 ```go
 // A welcome screen (press any key to continue)
-app.Text("Welcome to Silen Setup!\n\nThis will configure your window manager.")
+package main
 
-// Let the user pick a window manager. Result stored under key "wm".
-app.Select("wm", "Choose a window manager",
-    "InstantWM",
-    "Niri",
-    "DWM",
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+
+	"github.com/Cgtlpa/gotui"
 )
 
-// Ask for their name. Result stored under key "name".
-app.Input("name", "Your name: ", "e.g. Ada Lovelace")
+func clearScreen() {
+	cmd := exec.Command("clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
 
-// A yes/no question. Result stored under key "confirm".
-app.Confirm("confirm", "Continue with these settings?")
+func main() {
+	clearScreen()
+	app := gotui.New()
+	app.Title("Welcome")
+	app.Text("Hello, world!")
+	app.Select("option", "Pick one", "A", "B", "C")
 
-// A multi-field form.
-app.Form("email", "Email", "bio", "Bio")
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("You chose:", app.Value("option"))
+}
+
 ```
 
 ### Step 4: Run and retrieve results
