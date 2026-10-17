@@ -357,14 +357,47 @@ app.Run()
 
 | Setting | What it does | Analogy |
 |---------|--------------|---------|
-| `Width(n)` | Pads each line out to `n` characters. `0` means automatic. | The width of a sheet of paper. |
+| `Width(n)` | Pads each line out to `n` characters. `0` means automatic (use terminal width). | The width of a sheet of paper. |
 | `Height(n)` | Pads the view out to `n` lines. `0` means automatic. | The height of the sheet. |
 | `Center(true)` | Centers each line inside the width. `false` left-aligns. | Centering text in a word processor. |
 | `TextScale(n)` | Repeats each character `n` times horizontally. `1` is normal, `2` is double. | A stretch effect. Letters get wider. |
 
+### Center works without a width
+
+`Center(true)` auto-detects your terminal width. You don't have to set `Width` at all:
+
+```go
+app := gotui.New()
+app.Center(true)                    // centers using your terminal's actual width
+app.Text("This will be perfectly centered")
+app.Run()
+```
+
+Or combine with an explicit width:
+
+```go
+app := gotui.New()
+app.Center(true)
+app.Width(50)
+app.Input("name", "What's your name?")   // centered within 50 columns
+app.Run()
+```
+
+### Vertical centering too
+
+`Center(true)` also centers vertically when `Height` is set:
+
+```go
+app := gotui.New()
+app.Center(true)
+app.Height(20)
+app.Text("Vertically centered too!")
+app.Run()
+```
+
 A few things to know:
 
-- `Center` only has a visible effect when `Width` is set, because it needs a width to center within.
+- `Center(true)` without `Width` auto-detects your terminal width (works on Linux, macOS, and Windows).
 - `TextScale` is a visual trick. Terminals can't change real font size, so gotui stretches the text instead. It works well for titles.
 - Long text is **not** wrapped or cut off. If it's wider than your terminal, the terminal wraps it for you.
 
