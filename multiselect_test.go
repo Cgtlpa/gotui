@@ -1,7 +1,6 @@
 package gotui
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -9,17 +8,23 @@ import (
 func TestMultiSelectToggleAndConfirm(t *testing.T) {
 	ms := NewMultiSelect().WithOptions("A", "B", "C")
 
-	// Check A, B and C, then uncheck C again.
-	for _, k := range []func() KeyMsg{
-		func() KeyMsg { return keyRune(' ') },
-		keyDown,
-		func() KeyMsg { return keyRune(' ') },
-		keyDown,
-		func() KeyMsg { return keyRune(' ') },
-		func() KeyMsg { return keyRune(' ') },
-	} {
-		m, _ := ms.Update(k())
+	// Check A, move down twice to C, check C, toggle it off and back on.
+	m, _ := ms.Update(keyRune(' '))
+	ms = m.(*MultiSelect)
+	m, _ = ms.Update(keyDown())
+	ms = m.(*MultiSelect)
+	m, _ = ms.Update(keyDown())
+	ms = m.(*MultiSelect)
+	for i := 0; i < 3; i++ {
+		m, cmd := ms.Update(keyRune(' '))
 		ms = m.(*MultiSelect)
+		if cmd != nil {
+			t.Fatal("space should not quit")
+		}
+	}
+
+	if view := stripANSI(ms.View()); !strings.Contains(view, "[x] A") || !strings.Contains(view, "[x] C") {
+		t.Fatalf("A and C should render as checked:\n%s", view)
 	}
 
 	m, cmd := ms.Update(keyEnter())
@@ -30,9 +35,20 @@ func TestMultiSelectToggleAndConfirm(t *testing.T) {
 	if _, ok := cmd().(QuitMsg); !ok {
 		t.Fatal("expected QuitMsg")
 	}
-	got := ms.Result().([]string)
-	if strings.Join(got, ",") != "A,B" {
-		t.Fatalf("result = %v, want [A B]", got)
+	if got := ms.Result().([]string); strings.Join(got, ",") != "A,C" {
+		t.Fatalf("result = %v, want [A C]", got)
+	}
+}
+
+func TestMultiSelectEnterWithNothingChecked(t *testing.T) {
+	ms := NewMultiSelect().WithOptions("A", "B")
+	m, cmd := ms.Update(keyEnter())
+	ms = m.(*MultiSelect)
+	if _, ok := cmd().(QuitMsg); !ok {
+		t.Fatal("expected Quit on Enter")
+	}
+	if got := ms.Result().([]string); len(got) != 0 {
+		t.Fatalf("result = %v, want empty", got)
 	}
 }
 
@@ -45,89 +61,8 @@ func TestMultiSelectEmptyEnterIsNoop(t *testing.T) {
 	_ = m
 }
 
-func TestMultiSelectPreselect(t *testing.T) {
-	ms := NewMultiSelect().WithOptions("A", "B", "C").WithChecked(0, 2)
-	if !strings.Contains(stripANSI(ms.View()), "[x] A") {
-		t.Fatal("A should render as checked")
-	}
-
-	m, cmd := ms.Update(keyEnter())
-	ms = m.(*MultiSelect)
-	if cmd == nil {
-		t.Fatal("expected Quit command")
-	}
-	got := ms.Result().([]string)
-	if strings.Join(got, ",") != "A,C" {
-		t.Fatalf("result = %v, want [A C]", got)
-	}
-}
-
-func TestMultiSelectSections(t *testing.T) {
-	ms := NewMultiSelect().
-		Section("Terminals", "kitty", "alacritty").
-		Section("Shell", "zsh", "fish")
-
-	view := stripANSI(ms.View())
-	for _, want := range []string{"Terminals", "Shell", "kitty", "fish"} {
-		if !strings.Contains(view, want) {
-			t.Fatalf("view missing %q:\n%s", want, view)
-		}
-	}
-
-	// Cursor starts on kitty; two downs reach zsh (headers are skipped).
-	m, _ := ms.Update(keyDown())
-	ms = m.(*MultiSelect)
-	m, _ = ms.Update(keyDown())
-	ms = m.(*MultiSelect)
-	if ms.cursor != 2 {
-		t.Fatalf("cursor = %d, want 2 (zsh)", ms.cursor)
-	}
-
-	m, _ = ms.Update(keyRune(' '))
-	ms = m.(*MultiSelect)
-	m, _ = ms.Update(keyEnter())
-	ms = m.(*MultiSelect)
-	if got := ms.Result().([]string); strings.Join(got, ",") != "zsh" {
-		t.Fatalf("result = %v, want [zsh]", got)
-	}
-}
-
-func TestMultiSelectScrolling(t *testing.T) {
-	var opts []string
-	for i := 0; i < 20; i++ {
-		opts = append(opts, fmt.Sprintf("opt%02d", i))
-	}
-	ms := NewMultiSelect().WithOptions(opts...).WithRows(5)
-
-	view := stripANSI(ms.View())
-	if !strings.Contains(view, "more below") {
-		t.Fatal("expected 'more below' at the top of a long list")
-	}
-	if strings.Contains(view, "more above") {
-		t.Fatal("did not expect 'more above' at the top of the list")
-	}
-	if n := strings.Count(view, "["); n != 5 {
-		t.Fatalf("rendered %d option checkboxes, want 5 (viewport)", n)
-	}
-
-	for i := 0; i < len(opts)-1; i++ {
-		m, _ := ms.Update(keyDown())
-		ms = m.(*MultiSelect)
-	}
-	view = stripANSI(ms.View())
-	if !strings.Contains(view, "more above") {
-		t.Fatal("expected 'more above' once scrolled to the bottom")
-	}
-	if strings.Contains(view, "more below") {
-		t.Fatal("did not expect 'more below' at the bottom of the list")
-	}
-	if !strings.Contains(view, "opt19") {
-		t.Fatal("cursor option opt19 should be visible")
-	}
-}
-
 func TestMultiSelectViewStraightDown(t *testing.T) {
-	ms := NewMultiSelect().WithTitle("Pick extras").Section("Group", "A", "B").WithOptions("C")
+	ms := NewMultiSelect().WithTitle("Pick extras").WithOptions("A", "B", "C")
 	indented := 0
 	for i, line := range strings.Split(stripANSI(ms.View()), "\n") {
 		if strings.TrimSpace(line) == "" {
@@ -142,8 +77,8 @@ func TestMultiSelectViewStraightDown(t *testing.T) {
 		}
 		indented++
 	}
-	if indented < 4 {
-		t.Fatalf("expected at least 4 indented lines, got %d", indented)
+	if indented != 3 {
+		t.Fatalf("expected 3 indented option lines, got %d", indented)
 	}
 }
 

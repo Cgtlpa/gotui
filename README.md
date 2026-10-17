@@ -236,7 +236,7 @@ User picks one option with ↑/↓ (or j/k), Enter confirms. Result stored under
 
 ### `app.MultiSelect(key, title, options...)` — Checkbox list
 
-Space toggles the option under the cursor, ↑/↓ (or j/k) move the cursor, Enter confirms. Result stored under `key` as a `[]string` of the checked options. For section headings and a scrolling viewport, use the standalone component (section 6).
+Space toggles the option under the cursor, ↑/↓ (or j/k) move the cursor, Enter confirms. Result stored under `key` as a `[]string` of the checked options.
 
 ### `app.Input(key, prompt, placeholder)` — Single-line text input
 
@@ -310,10 +310,7 @@ gotui.NewSelect().
 
 gotui.NewMultiSelect().
     WithTitle("Choose extras").
-    Section("Terminals", "Kitty", "Alacritty").
-    Section("Shell", "Zsh", "Fish").
-    WithChecked(0).
-    WithRows(10).
+    WithOptions("Kitty", "Rofi", "Firefox").
     Run()
 
 gotui.NewInput().
