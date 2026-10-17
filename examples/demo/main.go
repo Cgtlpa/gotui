@@ -15,7 +15,7 @@ import (
 
 func main() {
 	app := gotui.New()
-	app.Title("Welcome to Silen Setup")
+	app.Title("Welcome to Setup Wizard")
 	app.Center(true)
 	app.Width(50)
 	app.Theme(gotui.NeonTheme())
@@ -24,7 +24,7 @@ func main() {
 		"and the simplicity of Huh.\n\nThis demo walks through input, " +
 		"select, confirm, and form components.")
 
-	app.Select("wm", "Pick your role", "Developer", "Designer", "Manager", "Other")
+	app.Select("choice", "Pick your role", "Developer", "Designer", "Manager", "Other")
 	app.Input("name", "Your name: ", "e.g. Ada Lovelace")
 	app.Confirm("confirm", "Create account?")
 	app.Form("email", "Email", "bio", "Bio")
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	fmt.Println("\n═══ Setup Complete ═══")
-	fmt.Printf("  Role:   %s\n", app.Value("wm"))
+	fmt.Printf("  Role:   %s\n", app.Value("choice"))
 	fmt.Printf("  Name:   %s\n", app.Value("name"))
 	fmt.Printf("  Email:  %s\n", app.Value("email"))
 	fmt.Printf("  Bio:    %s\n", app.Value("bio"))

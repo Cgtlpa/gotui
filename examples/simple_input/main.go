@@ -14,11 +14,11 @@ import (
 
 func main() {
 	app := gotui.New()
-	app.Title("Silen Setup")
+	app.Title("Setup Wizard")
 	app.Center(true)
 
-	app.Text("Welcome to Silen")
-	app.Select("wm", "Choose a window manager", "InstantWM", "Niri", "DWM")
+	app.Text("Welcome to the Setup Wizard")
+	app.Select("choice", "Choose an option", "Option A", "Option B", "Option C")
 	app.Input("name", "Your name: ", "e.g. Ada")
 	app.Confirm("confirm", "Continue?")
 	app.Form("email", "Email", "bio", "Bio")
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	fmt.Println("\nSetup complete!")
-	fmt.Printf("  WM:    %s\n", app.Value("wm"))
+	fmt.Printf("  WM:    %s\n", app.Value("choice"))
 	fmt.Printf("  Name:  %s\n", app.Value("name"))
 	fmt.Printf("  Email: %s\n", app.Value("email"))
 	fmt.Printf("  Bio:   %s\n", app.Value("bio"))
