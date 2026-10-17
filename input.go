@@ -62,8 +62,9 @@ func (i *Input) Update(msg Msg) (Model, Cmd) {
 		return i, Quit
 	case KeyBackspace:
 		if i.cursor > 0 {
+			newCursor := runePrev(i.Value, i.cursor)
 			i.Value = delBefore(i.Value, i.cursor)
-			i.cursor = runePrev(i.Value, i.cursor)
+			i.cursor = newCursor
 		}
 		return i, nil
 	case KeyDelete:

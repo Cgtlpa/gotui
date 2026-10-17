@@ -86,7 +86,8 @@ func (t *Terminal) Width() int {
 
 // ReadKey reads exactly one keypress. It first drains any buffered bytes,
 // then reads from stdin. If the first byte is ESC it waits briefly for the
-// rest of an escape sequence (arrow keys, etc.).
+// rest of an escape sequence (arrow keys, etc.). Multi-byte UTF-8 characters
+// are read completely so they are not split across keypresses.
 func (t *Terminal) ReadKey() (Key, error) {
 	// Drain buffered leftover bytes first.
 	if len(t.buf) > 0 {
@@ -102,7 +103,18 @@ func (t *Terminal) ReadKey() (Key, error) {
 
 	b := first[0]
 	if b != 0x1b {
-		return decodeByte(b), nil
+		// If this is a UTF-8 leading byte, read the remaining bytes.
+		if b >= 0xC2 {
+			remaining := utf8SequenceLen(b) - 1
+			if remaining > 0 {
+				rest := make([]byte, remaining)
+				if _, err := io.ReadFull(t.in, rest); err != nil {
+					return Key{}, err
+				}
+				first = append(first, rest...)
+			}
+		}
+		return decodeByte(first[0]), nil
 	}
 
 	// ESC pressed: wait briefly for the rest of an escape sequence.
@@ -119,6 +131,23 @@ func (t *Terminal) ReadKey() (Key, error) {
 	key, leftover := parseKey(all)
 	t.buf = leftover
 	return key, nil
+}
+
+// utf8SequenceLen returns the total length in bytes of a UTF-8 sequence
+// starting with the given leading byte. Returns 1 for ASCII bytes (0x00-0x7F).
+func utf8SequenceLen(b byte) int {
+	switch {
+	case b <= 0x7F:
+		return 1
+	case b >= 0xC2 && b <= 0xDF:
+		return 2
+	case b >= 0xE0 && b <= 0xEF:
+		return 3
+	case b >= 0xF0 && b <= 0xF4:
+		return 4
+	default:
+		return 1 // continuation byte or invalid, treat as single byte
+	}
 }
 
 // parseKey parses a complete byte slice that starts (optionally) with ESC and
