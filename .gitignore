@@ -1,0 +1,17 @@
+# Compiled binaries
+custom
+demo
+form
+layout
+preview
+simple_input
+*/custom
+*/demo
+*/form
+*/layout
+*/preview
+*/simple_input
+
+# Go build artifacts
+*.exe
+/test/
