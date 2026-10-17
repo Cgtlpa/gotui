@@ -89,10 +89,15 @@ func (a *App) Select(key, title string, options ...string) *App {
 // Input adds a single-line text input stored under key.
 //
 //	app.Input("name", "Your name: ", "e.g. Ada")
-func (a *App) Input(key, prompt, placeholder string) *App {
+//	app.Input("name", "Your name:")          // placeholder is optional
+func (a *App) Input(key, prompt string, placeholder ...string) *App {
+	in := NewInput().WithPrompt(prompt)
+	if len(placeholder) > 0 {
+		in.WithPlaceholder(placeholder[0])
+	}
 	a.steps = append(a.steps, step{
 		key:   key,
-		model: NewInput().WithPrompt(prompt).WithPlaceholder(placeholder),
+		model: in,
 	})
 	return a
 }
