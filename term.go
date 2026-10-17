@@ -218,7 +218,13 @@ func runePrev(s string, idx int) int {
 	if idx > len(s) {
 		idx = len(s)
 	}
+	if idx <= 0 {
+		return 0
+	}
 	r := []rune(s[:idx])
+	if len(r) == 0 {
+		return 0
+	}
 	return len(string(r[:len(r)-1]))
 }
 
@@ -227,18 +233,36 @@ func runeNext(s string, idx int) int {
 	if idx >= len(s) {
 		return len(s)
 	}
+	if idx < 0 {
+		idx = 0
+	}
 	r := []rune(s[idx:])
+	if len(r) == 0 {
+		return len(s)
+	}
 	return idx + len(string(r[:1]))
 }
 
 // delBefore removes the rune immediately before idx.
 func delBefore(s string, idx int) string {
+	if idx <= 0 {
+		return s
+	}
+	if idx > len(s) {
+		idx = len(s)
+	}
 	p := runePrev(s, idx)
 	return s[:p] + s[idx:]
 }
 
 // delAfter removes the rune at/after idx.
 func delAfter(s string, idx int) string {
+	if idx >= len(s) {
+		return s
+	}
+	if idx < 0 {
+		idx = 0
+	}
 	n := runeNext(s, idx)
 	return s[:idx] + s[n:]
 }
