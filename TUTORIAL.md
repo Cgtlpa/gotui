@@ -491,6 +491,7 @@ The `.WithSomething(...)` calls are **chained**: each one tweaks a setting and h
 | Text input | `gotui.NewInput()` | `(string, error)` |
 | Password input | `gotui.NewPassword()` | `(string, error)` |
 | Choice list | `gotui.NewSelect()` | `(string, error)` |
+| Checkbox list | `gotui.NewMultiSelect()` | `([]string, error)` |
 | Yes/no | `gotui.NewConfirm()` | `(bool, error)` |
 | Multi-field form | `gotui.NewForm()` | `error` (read answers with `Get(key)`) |
 | Read-only text | `gotui.NewText()` | `error` |
@@ -531,6 +532,76 @@ if err := form.Run(); err != nil {
 
 fmt.Println(form.Get("name"))
 fmt.Println(form.Get("email"))
+```
+
+---
+
+### Picking several options (MultiSelect)
+
+`Select` asks "pick one". `MultiSelect` is the same list with checkboxes, so the user can tick as many options as they like, including none. It is handy for "choose your extras" style questions.
+
+In an app, it works like every other screen:
+
+```go
+app.MultiSelect("extras", "Choose extras", "Kitty", "Rofi", "Firefox")
+
+// ...after Run()...
+extras := app.Value("extras").([]string)   // for example: ["Kitty", "Firefox"]
+```
+
+The arguments are the same as `Select`: the key, the title, and the options. The difference is the controls:
+
+| Key | What it does |
+|-----|--------------|
+| `↑` / `↓` or `j` / `k` | moves the cursor |
+| `space` | checks or unchecks the option under the cursor |
+| `Enter` | confirms and moves on |
+
+A few things to know:
+
+- Any number of options can be checked, including none. Confirming with nothing checked gives you an empty list.
+- The answer is a `[]string` (a list of words). If you don't need to loop over it, `%v` prints it nicely: `fmt.Printf("Extras: %v\n", app.Value("extras"))`.
+- The results come back in the same order as your options, not in the order the user checked them.
+
+On its own, outside of an app:
+
+```go
+extras, err := gotui.NewMultiSelect().
+	WithTitle("Choose extras").
+	WithOptions("Kitty", "Rofi", "Firefox").
+	Run()
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("You picked:", extras)
+```
+
+The same thing as a complete little program:
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/Cgtlpa/gotui"
+)
+
+func main() {
+	extras, err := gotui.NewMultiSelect().
+		WithTitle("Which extras do you want?").
+		WithOptions("Kitty", "Rofi", "Firefox").
+		Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Installing extras:", extras)
+	for _, e := range extras {
+		fmt.Println("  -", e)
+	}
+}
 ```
 
 ---
@@ -666,16 +737,17 @@ program.Send(gotui.KeyMsg{Key: gotui.Key{Type: gotui.KeyRune, Rune: 'q'}})
 
 These keys behave the same in every component:
 
-| Key | Input / Password | Select | Confirm | Form | Text |
-|-----|------------------|--------|---------|------|------|
-| Typing | inserts a character | — | — | inserts a character | — |
-| `←` / `→` | moves the cursor | — | toggles Yes/No | moves the cursor | — |
-| `↑` / `↓` or `j` / `k` | — | moves the selection | — | — | — |
-| `Tab` | — | — | — | next field | — |
-| `Enter` | submits | confirms | confirms | submits on the last field | continues |
-| `Backspace` | deletes a character | — | — | deletes a character | — |
-| `Esc` | cancels | cancels | cancels | cancels | cancels |
-| `Ctrl+C` | cancels | cancels | cancels | cancels | cancels |
+| Key | Input / Password | Select | MultiSelect | Confirm | Form | Text |
+|-----|------------------|--------|-------------|---------|------|------|
+| Typing | inserts a character | — | — | — | inserts a character | — |
+| `←` / `→` | moves the cursor | — | — | toggles Yes/No | moves the cursor | — |
+| `↑` / `↓` or `j` / `k` | — | moves the selection | moves the cursor | — | — | — |
+| `space` | — | — | checks / unchecks | — | — | — |
+| `Tab` | — | — | — | — | next field | — |
+| `Enter` | submits | confirms | confirms | confirms | submits on the last field | continues |
+| `Backspace` | deletes a character | — | — | — | deletes a character | — |
+| `Esc` | cancels | cancels | cancels | cancels | cancels | cancels |
+| `Ctrl+C` | cancels | cancels | cancels | cancels | cancels | cancels |
 
 Both `Esc` and `Ctrl+C` make `Run()` return `gotui.ErrCancelled`.
 
@@ -696,6 +768,7 @@ Both `Esc` and `Ctrl+C` make `Run()` return `gotui.ErrCancelled`.
 | `app.Theme(th)` | Sets the color theme. |
 | `app.Text(text)` | Adds a read-only screen. Any key continues. |
 | `app.Select(key, title, options...)` | Adds a single-choice list. |
+| `app.MultiSelect(key, title, options...)` | Adds a checkbox list. Result is a `[]string` of the checked options. |
 | `app.Input(key, prompt, placeholder)` | Adds a one-line text input (max 64 characters by default). |
 | `app.Password(key, prompt)` | Adds a masked input. |
 | `app.Confirm(key, title)` | Adds a yes/no question (`true` = Yes). |
