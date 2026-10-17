@@ -6,7 +6,7 @@ Built for beginners, powerful enough for experts. Zero external dependencies —
 
 ```
 Module path: gotui
-Install:     go get gotui
+Install:     go get github.com/Cgtlpa/gotui
 Go version:  1.16+
 ```
 
@@ -30,13 +30,13 @@ Two APIs in one framework:
 ```bash
 mkdir mytui && cd mytui
 go mod init mytui
-go get gotui
+go get github.com/Cgtlpa/gotui
 ```
 
 Import it:
 
 ```go
-import "gotui"
+import "github.com/Cgtlpa/gotui"
 ```
 
 ---
