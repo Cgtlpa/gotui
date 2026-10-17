@@ -112,17 +112,12 @@ type Layout struct {
 func (l Layout) Apply(view string) string {
 	lines := splitLines(view)
 
-	// Scale horizontally (TextScale).
+	// Scale horizontally (TextScale). Only visible characters are repeated;
+	// ANSI escape sequences are preserved intact.
 	if l.TextScale > 1 {
 		scaled := make([]string, len(lines))
 		for i, line := range lines {
-			var b strings.Builder
-			for _, r := range line {
-				for j := 0; j < l.TextScale; j++ {
-					b.WriteRune(r)
-				}
-			}
-			scaled[i] = b.String()
+			scaled[i] = scaleLine(line, l.TextScale)
 		}
 		lines = scaled
 	}
@@ -142,6 +137,35 @@ func (l Layout) Apply(view string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+// scaleLine repeats each visible character n times while leaving ANSI escape
+// sequences untouched.
+func scaleLine(line string, n int) string {
+	var b strings.Builder
+	i := 0
+	for i < len(line) {
+		if line[i] == '\x1b' && i+1 < len(line) && line[i+1] == '[' {
+			// Copy the entire escape sequence as-is.
+			b.WriteByte(line[i])
+			b.WriteByte(line[i+1])
+			i += 2
+			for i < len(line) && line[i] != '[' && (line[i] < '@' || line[i] > '~') {
+				b.WriteByte(line[i])
+				i++
+			}
+			if i < len(line) {
+				b.WriteByte(line[i])
+				i++
+			}
+		} else {
+			for j := 0; j < n; j++ {
+				b.WriteByte(line[i])
+			}
+			i++
+		}
+	}
+	return b.String()
 }
 
 // splitLines splits a string into lines, preserving empty lines.

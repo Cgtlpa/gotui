@@ -145,8 +145,17 @@ func (a *App) Run() error {
 		th = DefaultTheme()
 	}
 
+	width := a.width
+	// Auto-detect terminal width when centering is enabled but no explicit
+	// width was set. This makes app.Center(true) work out of the box.
+	if a.center && width == 0 {
+		if w := TerminalWidth(); w > 0 {
+			width = w
+		}
+	}
+
 	layout := Layout{
-		Width:     a.width,
+		Width:     width,
 		Center:    a.center,
 		Height:    a.height,
 		TextScale: a.textScale,

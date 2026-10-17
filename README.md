@@ -203,10 +203,12 @@ Shown above every screen. Renders in bold primary color.
 ### `app.Center(bool)` — Center text
 
 `true` centers each line within `Width`. `false` left-aligns.
+When `Center(true)` is used without `Width`, the terminal width is auto-detected.
 
 ### `app.Width(n)` — Set line width
 
 Pads each line to n characters (0 = auto, no padding).
+Use with `Center(true)` to center content within a fixed width.
 
 ### `app.Height(n)` — Set view height
 
@@ -384,10 +386,12 @@ app.Run()
 
 | Field | What it does |
 |-------|--------------|
-| `Width(n)` | Pad each line to n characters |
-| `Height(n)` | Pad view to n lines |
-| `Center(bool)` | Center each line within Width |
+| `Width(n)` | Pad each line to n characters (0 = auto) |
+| `Height(n)` | Pad view to n lines (0 = auto) |
+| `Center(bool)` | Center each line within Width. When `true` and `Width` is 0, the terminal width is auto-detected. |
 | `TextScale(n)` | Repeat each character n× horizontally |
+
+`Center(true)` works with `Width(n)` to center each line. If you set `Center(true)` without a `Width`, the terminal width is automatically detected.
 
 Long text is not clipped — it renders as-is. If width exceeds the terminal, the terminal wraps naturally.
 

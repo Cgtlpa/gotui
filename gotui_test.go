@@ -516,3 +516,124 @@ func TestFormViewStraightDown(t *testing.T) {
 		}
 	}
 }
+
+// ---- Layout / centering tests ----
+
+// TestPadLineCenter verifies that padLine centers text within the given width.
+func TestPadLineCenter(t *testing.T) {
+	// "Hi" in width 10: pad = 8, left = 4, right = 4
+	result := padLine("Hi", 10, true)
+	if leadingCols(result) != 4 {
+		t.Fatalf("padLine('Hi', 10, center) leading cols = %d, want 4", leadingCols(result))
+	}
+	if visibleLen(result) != 10 {
+		t.Fatalf("padLine('Hi', 10, center) visible len = %d, want 10", visibleLen(result))
+	}
+
+	// "Hello" in width 10: pad = 5, left = 2, right = 3
+	result = padLine("Hello", 10, true)
+	if leadingCols(result) != 2 {
+		t.Fatalf("padLine('Hello', 10, center) leading cols = %d, want 2", leadingCols(result))
+	}
+
+	// "Wide text" in width 5: text is wider, no padding
+	result = padLine("Wide text", 5, true)
+	if result != "Wide text" {
+		t.Fatalf("padLine('Wide text', 5, center) = %q, want %q", result, "Wide text")
+	}
+}
+
+// TestPadLineNoCenter verifies left-align padding.
+func TestPadLineNoCenter(t *testing.T) {
+	result := padLine("Hi", 10, false)
+	if leadingCols(result) != 0 {
+		t.Fatalf("padLine('Hi', 10, left) leading cols = %d, want 0", leadingCols(result))
+	}
+	if visibleLen(result) != 10 {
+		t.Fatalf("padLine('Hi', 10, left) visible len = %d, want 10", visibleLen(result))
+	}
+}
+
+// TestLayoutApplyCenter verifies Layout.Apply centers each line within the width.
+func TestLayoutApplyCenter(t *testing.T) {
+	layout := Layout{Width: 20, Center: true}
+	view := "Title\nShort\nA longer line"
+	result := layout.Apply(view)
+
+	lines := strings.Split(result, "\n")
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		// Each line should be padded to exactly Width visible characters.
+		if visibleLen(line) != 20 {
+			t.Fatalf("line %q is not padded to width 20: visibleLen=%d",
+				line, visibleLen(line))
+		}
+	}
+}
+
+// TestLayoutApplyNoWidth verifies that Width=0 means no padding.
+func TestLayoutApplyNoWidth(t *testing.T) {
+	layout := Layout{Center: true} // Width = 0
+	view := "Hello\nWorld"
+	result := layout.Apply(view)
+	if result != view {
+		t.Fatalf("Layout{Center:true} with Width=0 should not pad, got %q", result)
+	}
+}
+
+// TestScaleLinePreservesANSI verifies that scaleLine doesn't corrupt escape sequences.
+func TestScaleLinePreservesANSI(t *testing.T) {
+	// A line with ANSI color codes
+	line := "\x1b[38;5;6mCyan text\x1b[0m"
+	result := scaleLine(line, 2)
+	// The escape sequences should be intact
+	if !strings.Contains(result, "\x1b[38;5;6m") {
+		t.Fatal("scaleLine lost the foreground color escape")
+	}
+	if !strings.Contains(result, "\x1b[0m") {
+		t.Fatal("scaleLine lost the reset escape")
+	}
+	// Each visible character should be doubled
+	visible := stripANSI(result)
+	expected := "CCyyaann  tteexxtt"
+	if visible != expected {
+		t.Fatalf("scaleLine visible text = %q, want %q", visible, expected)
+	}
+}
+
+// TestCenteredSelectStraightDown verifies that a centered Select renders all
+// option lines centered within the width.
+func TestCenteredSelectStraightDown(t *testing.T) {
+	layout := Layout{Width: 40, Center: true}
+	s := NewSelect().WithTitle("Pick one").WithOptions("InstantWM", "Niri", "DWM")
+	view := layout.Apply(s.View())
+	stripped := stripANSI(view)
+	lines := strings.Split(stripped, "\n")
+
+	// Each indented content line shorter than Width should be padded to Width.
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		// Skip lines before the first blank line (title area)
+		beforeBlank := true
+		for j := 0; j < i; j++ {
+			if strings.TrimSpace(lines[j]) == "" {
+				beforeBlank = false
+				break
+			}
+		}
+		if beforeBlank {
+			continue
+		}
+		// Lines wider than Width are left unchanged by padLine.
+		if visibleLen(line) <= 40 {
+			if visibleLen(line) != 40 {
+				t.Fatalf("line %d (%q) is not padded to width 40: visibleLen=%d",
+					i, line, visibleLen(line))
+			}
+		}
+	}
+}
