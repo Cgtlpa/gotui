@@ -44,6 +44,7 @@ func NewForm() *Form {
 func (f *Form) WithTitle(t string) *Form  { f.Title = t; return f }
 func (f *Form) WithTheme(t Theme) *Form   { f.Theme = t; return f }
 func (f *Form) WithLayout(l Layout) *Form { f.Layout = l; return f }
+func (f *Form) setTheme(t Theme)          { f.Theme = t }
 
 func (f *Form) WithInput(key, label string) *Form {
 	fd := &formField{Key: key, Label: label}

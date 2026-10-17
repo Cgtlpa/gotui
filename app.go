@@ -34,8 +34,9 @@ type App struct {
 
 // step is one registered screen in the app.
 type step struct {
-	model Model
-	key   string // result key, empty if the step doesn't produce a value
+	model       Model
+	key         string // result key, empty if the step doesn't produce a value
+	useAppTheme bool   // adopt the app theme when Run starts
 }
 
 // New creates a new App with defaults.
@@ -61,7 +62,7 @@ func (a *App) Height(h int) *App { a.height = h; return a }
 // TextScale scales text horizontally (1 = normal, 2 = double, etc.).
 func (a *App) TextScale(s int) *App { a.textScale = s; return a }
 
-// Theme sets the color palette for every step.
+// Theme sets the color palette for the built-in steps.
 func (a *App) Theme(th Theme) *App { a.theme = th; return a }
 
 // Value returns the stored result for the given key, or nil if not set.
@@ -71,7 +72,7 @@ func (a *App) Value(key string) interface{} {
 
 // Text adds a read-only text screen. Press any key to continue.
 func (a *App) Text(text string) *App {
-	a.steps = append(a.steps, step{model: NewText().WithBody(text)})
+	a.steps = append(a.steps, step{model: NewText().WithBody(text), useAppTheme: true})
 	return a
 }
 
@@ -80,8 +81,9 @@ func (a *App) Text(text string) *App {
 //	app.Select("wm", "Choose a window manager", "InstantWM", "Niri", "DWM")
 func (a *App) Select(key, title string, options ...string) *App {
 	a.steps = append(a.steps, step{
-		key:   key,
-		model: NewSelect().WithTitle(title).WithOptions(options...),
+		key:         key,
+		model:       NewSelect().WithTitle(title).WithOptions(options...),
+		useAppTheme: true,
 	})
 	return a
 }
@@ -93,8 +95,9 @@ func (a *App) Select(key, title string, options ...string) *App {
 //	app.MultiSelect("extras", "Choose extras", "Kitty", "Rofi", "Firefox")
 func (a *App) MultiSelect(key, title string, options ...string) *App {
 	a.steps = append(a.steps, step{
-		key:   key,
-		model: NewMultiSelect().WithTitle(title).WithOptions(options...),
+		key:         key,
+		model:       NewMultiSelect().WithTitle(title).WithOptions(options...),
+		useAppTheme: true,
 	})
 	return a
 }
@@ -109,8 +112,9 @@ func (a *App) Input(key, prompt string, placeholder ...string) *App {
 		in.WithPlaceholder(placeholder[0])
 	}
 	a.steps = append(a.steps, step{
-		key:   key,
-		model: in,
+		key:         key,
+		model:       in,
+		useAppTheme: true,
 	})
 	return a
 }
@@ -120,8 +124,9 @@ func (a *App) Input(key, prompt string, placeholder ...string) *App {
 //	app.Password("pass", "Password")
 func (a *App) Password(key, prompt string) *App {
 	a.steps = append(a.steps, step{
-		key:   key,
-		model: NewPassword().WithPrompt(prompt),
+		key:         key,
+		model:       NewPassword().WithPrompt(prompt),
+		useAppTheme: true,
 	})
 	return a
 }
@@ -131,8 +136,9 @@ func (a *App) Password(key, prompt string) *App {
 //	app.Confirm("confirm", "Continue?")
 func (a *App) Confirm(key, title string) *App {
 	a.steps = append(a.steps, step{
-		key:   key,
-		model: NewConfirm().WithTitle(title),
+		key:         key,
+		model:       NewConfirm().WithTitle(title),
+		useAppTheme: true,
 	})
 	return a
 }
@@ -145,7 +151,7 @@ func (a *App) Form(fields ...string) *App {
 	for i := 0; i+1 < len(fields); i += 2 {
 		f = f.WithInput(fields[i], fields[i+1])
 	}
-	a.steps = append(a.steps, step{model: f})
+	a.steps = append(a.steps, step{model: f, useAppTheme: true})
 	return a
 }
 
@@ -173,6 +179,10 @@ func (a *App) Run() error {
 	}
 
 	for _, st := range a.steps {
+		if st.useAppTheme {
+			applyTheme(st.model, th)
+		}
+
 		wrapped := &appStep{
 			app:   a,
 			step:  st,
@@ -216,6 +226,20 @@ func resultOrNil(m Model) (interface{}, bool) {
 		return nil, false
 	}
 	return c.Result(), true
+}
+
+// themeable is implemented by the built-in components so that built-in app
+// steps can adopt the app theme. It stays unexported: custom models keep
+// whatever theme they were given.
+type themeable interface {
+	setTheme(Theme)
+}
+
+// applyTheme gives m the app theme when it supports it.
+func applyTheme(m Model, th Theme) {
+	if t, ok := m.(themeable); ok {
+		t.setTheme(th)
+	}
 }
 
 // appStep wraps a step's model with title/layout/theme applied at render time.

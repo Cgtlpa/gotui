@@ -309,6 +309,66 @@ func TestAppFormStoresFieldValues(t *testing.T) {
 	}
 }
 
+// ---- App theme tests ----
+
+func TestAppThemeAppliesToBuiltinSteps(t *testing.T) {
+	th := NeonTheme()
+	app := New().Theme(th)
+	app.Text("hi")
+	app.Select("s", "pick", "A")
+	app.MultiSelect("m", "pick", "A", "B")
+	app.Input("i", "name")
+	app.Password("p", "pass")
+	app.Confirm("c", "ok?")
+	app.Form("f", "F")
+
+	// App.Run applies the theme before each built-in step.
+	for _, st := range app.steps {
+		if !st.useAppTheme {
+			t.Fatal("built-in step should adopt the app theme")
+		}
+		applyTheme(st.model, th)
+	}
+
+	themes := map[string]Theme{
+		"Text":        app.steps[0].model.(*Text).Theme,
+		"Select":      app.steps[1].model.(*Select).Theme,
+		"MultiSelect": app.steps[2].model.(*MultiSelect).Theme,
+		"Input":       app.steps[3].model.(*Input).Theme,
+		"Password":    app.steps[4].model.(*Input).Theme, // app.Password stores the masked *Input
+		"Confirm":     app.steps[5].model.(*Confirm).Theme,
+		"Form":        app.steps[6].model.(*Form).Theme,
+	}
+	for name, got := range themes {
+		if got != th {
+			t.Fatalf("%s theme = %+v, want the app theme", name, got)
+		}
+	}
+
+	// The rendered view must use the app palette, not the default one.
+	view := app.steps[2].model.(*MultiSelect).View()
+	if !strings.Contains(view, th.FgColor(th.Primary)) {
+		t.Fatal("MultiSelect view should use the app theme colors")
+	}
+}
+
+func TestAppCustomKeepsOwnTheme(t *testing.T) {
+	sp := NewSpinner().WithTheme(NeonTheme())
+	app := New().Theme(DarkTheme())
+	app.Custom(sp)
+
+	// Custom steps are never re-themed, even though Run applies the app
+	// theme to built-in steps.
+	for _, st := range app.steps {
+		if st.useAppTheme {
+			applyTheme(st.model, app.theme)
+		}
+	}
+	if sp.Theme != NeonTheme() {
+		t.Fatal("app.Custom steps should keep their own theme")
+	}
+}
+
 // ---- Cancellation tests ----
 
 func TestErrCancelledIsReturned(t *testing.T) {

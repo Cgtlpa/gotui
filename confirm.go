@@ -29,6 +29,7 @@ func (c *Confirm) DefaultYes() *Confirm         { return c.WithValue(true) }
 func (c *Confirm) DefaultNo() *Confirm          { return c.WithValue(false) }
 func (c *Confirm) WithTheme(t Theme) *Confirm   { c.Theme = t; return c }
 func (c *Confirm) WithLayout(l Layout) *Confirm { c.Layout = l; return c }
+func (c *Confirm) setTheme(t Theme)             { c.Theme = t }
 
 func boolIdx(v bool) int {
 	if v {

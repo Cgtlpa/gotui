@@ -20,6 +20,7 @@ func (t *Text) WithTitle(ti string) *Text  { t.Title = ti; return t }
 func (t *Text) WithBody(body string) *Text { t.Body = body; return t }
 func (t *Text) WithTheme(th Theme) *Text   { t.Theme = th; return t }
 func (t *Text) WithLayout(l Layout) *Text  { t.Layout = l; return t }
+func (t *Text) setTheme(th Theme)          { t.Theme = th }
 
 func (t *Text) theme() Theme {
 	if t.Theme == (Theme{}) {

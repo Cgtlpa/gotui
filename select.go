@@ -28,6 +28,7 @@ func (s *Select) WithOptions(opts ...string) *Select { s.Options = opts; return 
 func (s *Select) WithCursor(n int) *Select           { s.cursor = n; return s }
 func (s *Select) WithTheme(t Theme) *Select          { s.Theme = t; return s }
 func (s *Select) WithLayout(l Layout) *Select        { s.Layout = l; return s }
+func (s *Select) setTheme(t Theme)                   { s.Theme = t }
 
 func (s *Select) theme() Theme {
 	if s.Theme == (Theme{}) {

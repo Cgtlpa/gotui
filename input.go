@@ -38,6 +38,7 @@ func (i *Input) WithValue(v string) *Input       { i.Value = v; i.cursor = len(v
 func (i *Input) WithCharLimit(n int) *Input      { i.CharLimit = n; return i }
 func (i *Input) AsPassword() *Input              { i.Password = true; return i }
 func (i *Input) WithTheme(t Theme) *Input        { i.Theme = t; return i }
+func (i *Input) setTheme(t Theme)                { i.Theme = t }
 func (i *Input) WithLayout(l Layout) *Input      { i.Layout = l; return i }
 
 func (i *Input) theme() Theme {

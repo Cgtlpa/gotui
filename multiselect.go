@@ -39,6 +39,7 @@ func (m *MultiSelect) WithOptions(opts ...string) *MultiSelect {
 
 func (m *MultiSelect) WithTheme(t Theme) *MultiSelect   { m.Theme = t; return m }
 func (m *MultiSelect) WithLayout(l Layout) *MultiSelect { m.Layout = l; return m }
+func (m *MultiSelect) setTheme(t Theme)                 { m.Theme = t }
 
 func (m *MultiSelect) theme() Theme {
 	if m.Theme == (Theme{}) {
