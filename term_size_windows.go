@@ -15,8 +15,8 @@ import (
 // the COLUMNS environment variable, then 0.
 func terminalWidth() int {
 	// Try Windows API first.
-	if h := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE); h != 0 {
-		var csbi windows.CONSOLE_SCREEN_BUFFER_INFO
+	if h, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE); err == nil && h != 0 {
+		var csbi windows.ConsoleScreenBufferInfo
 		if err := windows.GetConsoleScreenBufferInfo(h, &csbi); err == nil {
 			return int(csbi.Size.X)
 		}
