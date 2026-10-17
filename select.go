@@ -71,8 +71,9 @@ func (s *Select) Update(msg Msg) (Model, Cmd) {
 		if len(s.Options) > 0 {
 			s.done = true
 			s.result = s.Options[s.cursor]
+			return s, Quit
 		}
-		return s, Quit
+		return s, nil
 	default:
 		return s, nil
 	}
