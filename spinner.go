@@ -45,7 +45,7 @@ func (s *Spinner) Update(msg Msg) (Model, Cmd) {
 	}
 	s.msg = msg
 	s.done = true
-	return s, nil
+	return s, Quit
 }
 
 func (s *Spinner) View() string {
