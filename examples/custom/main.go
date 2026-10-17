@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	"gotui"
+	"github.com/Cgtlpa/gotui"
 )
 
 type counter struct {

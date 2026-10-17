@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gotui"
+	"github.com/Cgtlpa/gotui"
 )
 
 func main() {
