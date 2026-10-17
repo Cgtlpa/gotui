@@ -122,7 +122,7 @@ app := gotui.New()
 Shown above every screen. Renders in bold with your theme's primary color.
 
 ```go
-app.Title("Silen Setup")
+app.Title("Setup Wizard")
 ```
 
 Chainable: returns `*App`.
@@ -219,7 +219,7 @@ Each method adds a screen. `Run()` executes them sequentially.
 Displays text. User presses any key to continue. No result stored.
 
 ```go
-app.Text("Welcome to Silen Setup!\n\nThis will configure your window manager.")
+app.Text("Welcome to the Setup Wizard!\n\nThis will guide you through the configuration.")
 ```
 
 Supports multiple lines via `\n`.
@@ -687,7 +687,7 @@ Test it: press Ctrl+C during a component, then type in your shell — it should 
 
 ## Complete Walkthrough: Setup Wizard
 
-Let's build a complete "Silen Setup" wizard that demonstrates every feature.
+Let's build a complete setup wizard that demonstrates every feature.
 
 ```go
 package main
@@ -702,21 +702,21 @@ import (
 
 func main() {
 	app := gotui.New()
-	app.Title("Silen Setup")
+	app.Title("Setup Wizard")
 	app.Center(true)
 	app.Width(50)
 	app.Theme(gotui.NeonTheme())
 
 	// Welcome screen
-	app.Text("Welcome to Silen Setup!\n\n" +
-		"This wizard will configure your window manager and user account.\n" +
+	app.Text("Welcome to the Setup Wizard!\n\n" +
+		"This wizard will guide you through the configuration.\n" +
 		"Press any key to continue.")
 
-	// Select a window manager (result stored under "wm")
-	app.Select("wm", "Choose a window manager",
-		"InstantWM",
-		"Niri",
-		"DWM",
+	// Select an option (result stored under "choice")
+	app.Select("choice", "Choose an option",
+		"Option A",
+		"Option B",
+		"Option C",
 	)
 
 	// Enter your name (result stored under "name")
@@ -739,18 +739,18 @@ func main() {
 
 	// Display results
 	fmt.Println("\n═══ Setup Complete ═══")
-	fmt.Printf("  Window Manager: %s\n", app.Value("wm"))
-	fmt.Printf("  Name:           %s\n", app.Value("name"))
-	fmt.Printf("  Email:          %s\n", app.Value("email"))
-	fmt.Printf("  Bio:            %s\n", app.Value("bio"))
+	fmt.Printf("  Choice:  %s\n", app.Value("choice"))
+	fmt.Printf("  Name:    %s\n", app.Value("name"))
+	fmt.Printf("  Email:   %s\n", app.Value("email"))
+	fmt.Printf("  Bio:     %s\n", app.Value("bio"))
 	fmt.Println("══════════════════════")
 }
 ```
 
 **What the user sees:**
 
-1. A neon-colored welcome screen (press any key)
-2. A selection list for window manager (↑/↓ to move, Enter to confirm)
+1. A welcome screen (press any key)
+2. A selection list for the option (↑/↓ to move, Enter to confirm)
 3. A text input for their name (type, Enter to submit)
 4. A yes/no confirm (←/→ to toggle, Enter to confirm)
 5. A multi-field form with email and bio (Tab to move, Enter on last field to submit)

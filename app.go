@@ -5,11 +5,11 @@ import "strings"
 // App is the simple, cohesive entry point to gotui.
 //
 //	app := gotui.New()
-//	app.Title("Silen Setup")
+//	app.Title("Setup Wizard")
 //	app.Center(true)
-//	app.Text("Welcome to Silen")
-//	app.Select("wm", "Choose a window manager", "InstantWM", "Niri", "DWM")
-//	app.Input("hostname", "Hostname", "silen-pc")
+//	app.Text("Welcome to the Setup Wizard")
+//	app.Select("choice", "Choose an option", "InstantWM", "Niri", "DWM")
+//	app.Input("name", "Your name: ", "e.g. Ada")
 //	app.Confirm("confirm", "Continue?")
 //
 //	if err := app.Run(); err != nil {
@@ -19,7 +19,7 @@ import "strings"
 //	    log.Fatal(err)
 //	}
 //
-//	fmt.Println("WM:", app.Value("wm"))
+//	fmt.Println("Choice:", app.Value("choice"))
 type App struct {
 	title     string
 	center    bool
@@ -88,7 +88,7 @@ func (a *App) Select(key, title string, options ...string) *App {
 
 // Input adds a single-line text input stored under key.
 //
-//	app.Input("hostname", "Hostname", "silen-pc")
+//	app.Input("name", "Your name: ", "e.g. Ada")
 func (a *App) Input(key, prompt, placeholder string) *App {
 	a.steps = append(a.steps, step{
 		key:   key,

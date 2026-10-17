@@ -7,10 +7,10 @@
 // Quick start:
 //
 //	app := gotui.New()
-//	app.Title("Silen Setup")
+//	app.Title("Setup Wizard")
 //	app.Center(true)
-//	app.Text("Welcome to Silen")
-//	app.Select("wm", "Choose a window manager", "InstantWM", "Niri", "DWM")
+//	app.Text("Welcome to the Setup Wizard")
+//	app.Select("choice", "Choose an option", "InstantWM", "Niri", "DWM")
 //	app.Input("name", "Your name: ", "e.g. Ada")
 //	app.Confirm("confirm", "Continue?")
 //
@@ -21,7 +21,7 @@
 //	    log.Fatal(err)
 //	}
 //
-//	fmt.Println("WM:", app.Value("wm"))
+//	fmt.Println("Choice:", app.Value("choice"))
 //
 // See the README for a complete tutorial and API reference.
 package gotui

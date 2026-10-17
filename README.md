@@ -81,13 +81,13 @@ go run main.go
 
 ## 4. Complete Tutorial: Building a Setup Wizard
 
-Let's build a real "Silen Setup" wizard step by step, explaining every feature along the way.
+Let's build a real setup wizard step by step, explaining every feature along the way.
 
 ### Step 1: Create the app and set the title
 
 ```go
 app := gotui.New()
-app.Title("Silen Setup")
+app.Title("Setup Wizard")
 ```
 
 `Title()` sets the heading shown above every screen. It renders in bold with your theme's primary color.
@@ -110,37 +110,23 @@ Each call adds a screen. `Run()` shows them one at a time.
 
 ```go
 // A welcome screen (press any key to continue)
-package main
+app.Text("Welcome to the Setup Wizard!\n\nThis will guide you through the configuration.")
 
-import (
-	"fmt"
-	"log"
-	"os"
-	"os/exec"
-
-	"github.com/Cgtlpa/gotui"
+// Let the user pick an option. Result stored under key "choice".
+app.Select("choice", "Choose an option",
+    "Option A",
+    "Option B",
+    "Option C",
 )
 
-func clearScreen() {
-	cmd := exec.Command("clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
+// Ask for their name. Result stored under key "name".
+app.Input("name", "Your name: ", "e.g. Ada Lovelace")
 
-func main() {
-	clearScreen()
-	app := gotui.New()
-	app.Title("Welcome")
-	app.Text("Hello, world!")
-	app.Select("option", "Pick one", "A", "B", "C")
+// A yes/no question. Result stored under key "confirm".
+app.Confirm("confirm", "Continue with these settings?")
 
-	if err := app.Run(); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("You chose:", app.Value("option"))
-}
-
+// A multi-field form.
+app.Form("email", "Email", "bio", "Bio")
 ```
 
 ### Step 4: Run and retrieve results
@@ -155,10 +141,10 @@ if err := app.Run(); err != nil {
 }
 
 fmt.Println("\n═══ Setup Complete ═══")
-fmt.Printf("  WM:     %s\n", app.Value("wm"))
-fmt.Printf("  Name:   %s\n", app.Value("name"))
-fmt.Printf("  Email:  %s\n", app.Value("email"))
-fmt.Printf("  Bio:    %s\n", app.Value("bio"))
+fmt.Printf("  Choice:  %s\n", app.Value("choice"))
+fmt.Printf("  Name:    %s\n", app.Value("name"))
+fmt.Printf("  Email:   %s\n", app.Value("email"))
+fmt.Printf("  Bio:     %s\n", app.Value("bio"))
 ```
 
 ### Full example
@@ -176,12 +162,12 @@ import (
 
 func main() {
 	app := gotui.New()
-	app.Title("Silen Setup")
+	app.Title("Setup Wizard")
 	app.Center(true)
 	app.Width(50)
 
-	app.Text("Welcome to Silen Setup!\n\nConfigure your system below.")
-	app.Select("wm", "Choose a window manager", "InstantWM", "Niri", "DWM")
+	app.Text("Welcome to the Setup Wizard!\n\nConfigure your system below.")
+	app.Select("choice", "Choose an option", "Option A", "Option B", "Option C")
 	app.Input("name", "Your name: ", "e.g. Ada Lovelace")
 	app.Confirm("confirm", "Continue?")
 	app.Form("email", "Email", "bio", "Bio")
@@ -195,10 +181,10 @@ func main() {
 	}
 
 	fmt.Println("\nSetup complete!")
-	fmt.Printf("  WM:   %s\n", app.Value("wm"))
-	fmt.Printf("  Name: %s\n", app.Value("name"))
-	fmt.Printf("  Email: %s\n", app.Value("email"))
-	fmt.Printf("  Bio:  %s\n", app.Value("bio"))
+	fmt.Printf("  Choice:  %s\n", app.Value("choice"))
+	fmt.Printf("  Name:    %s\n", app.Value("name"))
+	fmt.Printf("  Email:   %s\n", app.Value("email"))
+	fmt.Printf("  Bio:     %s\n", app.Value("bio"))
 }
 ```
 
@@ -313,7 +299,7 @@ gotui.NewSelect().
 
 gotui.NewInput().
     WithPrompt("Hostname: ").
-    WithPlaceholder("silen-pc").
+    WithPlaceholder("example-pc").
     WithCharLimit(32).
     Run()
 
