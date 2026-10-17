@@ -110,8 +110,9 @@ func (f *Form) Update(msg Msg) (Model, Cmd) {
 	switch km.Key.Type {
 	case KeyBackspace:
 		if fd.cursor > 0 {
+			newCursor := runePrev(fd.Value, fd.cursor)
 			fd.Value = delBefore(fd.Value, fd.cursor)
-			fd.cursor = runePrev(fd.Value, fd.cursor)
+			fd.cursor = newCursor
 		}
 	case KeyDelete:
 		if fd.cursor < len(fd.Value) {
