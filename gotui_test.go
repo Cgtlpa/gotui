@@ -282,6 +282,33 @@ func TestAppValueMissingKey(t *testing.T) {
 	}
 }
 
+func TestAppFormStoresFieldValues(t *testing.T) {
+	app := New()
+	app.Form("email", "Email", "bio", "Bio")
+	f, ok := app.steps[0].model.(*Form)
+	if !ok {
+		t.Fatal("step model is not *Form")
+	}
+
+	// Type into the first field, tab to the second, type, then submit.
+	m, _ := f.Update(keyRune('x'))
+	f = m.(*Form)
+	m, _ = f.Update(KeyMsg{Key: Key{Type: KeyTab}})
+	f = m.(*Form)
+	m, _ = f.Update(keyRune('y'))
+	f = m.(*Form)
+	m, cmd := f.Update(keyEnter())
+	f = m.(*Form)
+	if _, ok := cmd().(QuitMsg); !ok {
+		t.Fatal("expected Quit on submit")
+	}
+
+	app.storeResult(app.steps[0], f.Result())
+	if app.Value("email") != "x" || app.Value("bio") != "y" {
+		t.Fatalf("form values not stored: email=%v bio=%v", app.Value("email"), app.Value("bio"))
+	}
+}
+
 // ---- Cancellation tests ----
 
 func TestErrCancelledIsReturned(t *testing.T) {

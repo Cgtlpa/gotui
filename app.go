@@ -174,13 +174,26 @@ func (a *App) Run() error {
 		}
 
 		if comp, ok := resultOrNil(st.model); ok {
-			if st.key != "" {
-				a.values[st.key] = comp
-			}
+			a.storeResult(st, comp)
 		}
 	}
 
 	return nil
+}
+
+// storeResult records a finished step's result. Steps with a key store their
+// result under it; keyless steps that return a map (Forms) store each entry
+// under its field key.
+func (a *App) storeResult(st step, comp interface{}) {
+	if st.key != "" {
+		a.values[st.key] = comp
+		return
+	}
+	if m, ok := comp.(map[string]string); ok {
+		for k, v := range m {
+			a.values[k] = v
+		}
+	}
 }
 
 // resultOrNil extracts a result from a component if it implements Component.
