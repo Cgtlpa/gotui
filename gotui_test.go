@@ -372,6 +372,10 @@ func TestAllComponentsStraightDown(t *testing.T) {
 			})(),
 		},
 		{
+			name: "MultiSelect",
+			view: NewMultiSelect().WithTitle("Pick").WithOptions("A", "B", "C").View(),
+		},
+		{
 			name: "Confirm No",
 			view: NewConfirm().WithTitle("Sure?").DefaultNo().View(),
 		},

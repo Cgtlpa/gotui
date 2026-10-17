@@ -86,6 +86,19 @@ func (a *App) Select(key, title string, options ...string) *App {
 	return a
 }
 
+// MultiSelect adds a checkbox list stored under key as a []string of the
+// checked options. Space toggles, ↑/↓ (or j/k) move the cursor, Enter
+// confirms.
+//
+//	app.MultiSelect("extras", "Choose extras", "Kitty", "Rofi", "Firefox")
+func (a *App) MultiSelect(key, title string, options ...string) *App {
+	a.steps = append(a.steps, step{
+		key:   key,
+		model: NewMultiSelect().WithTitle(title).WithOptions(options...),
+	})
+	return a
+}
+
 // Input adds a single-line text input stored under key.
 //
 //	app.Input("name", "Your name: ", "e.g. Ada")

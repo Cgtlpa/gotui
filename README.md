@@ -119,6 +119,10 @@ app.Select("choice", "Choose an option",
     "Option C",
 )
 
+// A checkbox list. Space toggles, Enter confirms.
+// Result stored under "extras" as []string.
+app.MultiSelect("extras", "Choose extras", "Kitty", "Rofi", "Firefox")
+
 // Ask for their name. Result stored under key "name".
 app.Input("name", "Your name: ", "e.g. Ada Lovelace")
 
@@ -230,6 +234,10 @@ Displays text. User presses any key to continue. No result stored.
 
 User picks one option with ↑/↓ (or j/k), Enter confirms. Result stored under `key`.
 
+### `app.MultiSelect(key, title, options...)` — Checkbox list
+
+Space toggles the option under the cursor, ↑/↓ (or j/k) move the cursor, Enter confirms. Result stored under `key` as a `[]string` of the checked options. For section headings and a scrolling viewport, use the standalone component (section 6).
+
 ### `app.Input(key, prompt, placeholder)` — Single-line text input
 
 User types text. Result stored under `key`. Max 64 characters by default (use standalone `WithCharLimit` to change).
@@ -284,6 +292,7 @@ fmt.Println("Hello,", name)
 | `NewInput()` | `*Input` | `(string, error)` |
 | `NewPassword()` | `*Password` | `(string, error)` |
 | `NewSelect()` | `*Select` | `(string, error)` |
+| `NewMultiSelect()` | `*MultiSelect` | `([]string, error)` |
 | `NewConfirm()` | `*Confirm` | `(bool, error)` |
 | `NewForm()` | `*Form` | `error` (use `Get(key)`) |
 | `NewText()` | `*Text` | `error` |
@@ -297,6 +306,14 @@ gotui.NewSelect().
     WithOptions("Red", "Green", "Blue").
     WithCursor(1).
     WithTheme(gotui.DarkTheme()).
+    Run()
+
+gotui.NewMultiSelect().
+    WithTitle("Choose extras").
+    Section("Terminals", "Kitty", "Alacritty").
+    Section("Shell", "Zsh", "Fish").
+    WithChecked(0).
+    WithRows(10).
     Run()
 
 gotui.NewInput().
@@ -341,6 +358,7 @@ Retrieve results:
 wm := app.Value("wm")           // "InstantWM"
 name := app.Value("name")       // "Ada Lovelace"
 confirmed := app.Value("confirm") // true/false
+extras := app.Value("extras").([]string) // []string of checked options
 ```
 
 For standalone forms:
@@ -366,7 +384,7 @@ Behavior is consistent across every component:
 | `Ctrl+C` | Cancel whole app → returns `ErrCancelled` |
 | `Backspace` | Delete character before cursor |
 
-All keys work the same in Input, Password, Select, Confirm, and Form.
+All keys work the same in Input, Password, Select, MultiSelect, Confirm, and Form.
 
 ---
 
@@ -546,16 +564,17 @@ Also included: `go run ./cmd/preview` — renders every component to stdout with
 
 ## 14. Keyboard Reference
 
-| Key | Input/Password | Select | Confirm | Form | Text |
-|-----|---------------|--------|---------|------|------|
-| type | insert char | — | — | insert char | — |
-| `←`/`→` | move cursor | — | toggle Yes/No | move cursor | — |
-| `↑`/`↓` / `j`/`k` | — | move selection | — | — | — |
-| `Tab` | — | — | — | next field | — |
-| `Enter` | submit | confirm | confirm | submit (last field) | continue |
-| `Esc` | cancel | cancel | cancel | cancel | cancel |
-| `Ctrl+C` | cancel | cancel | cancel | cancel | cancel |
-| `Backspace` | delete | — | — | delete | — |
+| Key | Input/Password | Select | MultiSelect | Confirm | Form | Text |
+|-----|---------------|--------|-------------|---------|------|------|
+| type | insert char | — | — | — | insert char | — |
+| `←`/`→` | move cursor | — | — | toggle Yes/No | move cursor | — |
+| `↑`/`↓` / `j`/`k` | — | move selection | move selection | — | — | — |
+| `space` | — | — | toggle option | — | — | — |
+| `Tab` | — | — | — | — | next field | — |
+| `Enter` | submit | confirm | confirm | confirm | submit (last field) | continue |
+| `Esc` | cancel | cancel | cancel | cancel | cancel | cancel |
+| `Ctrl+C` | cancel | cancel | cancel | cancel | cancel | cancel |
+| `Backspace` | delete | — | — | — | delete | — |
 
 ---
 

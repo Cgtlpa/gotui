@@ -46,13 +46,14 @@ func main() {
 	out.WriteString("(Renders below as sequential screens.)\n\n")
 
 	// ── Example 2: Full demo with all components ──
-	hr("Full demo: Title + Center + Text + Select + Input + Confirm + Form")
+	hr("Full demo: Title + Center + Text + Select + MultiSelect + Input + Confirm + Form")
 	out.WriteString("app := gotui.New()\n")
 	out.WriteString("app.Title(\"Setup Wizard\")\n")
 	out.WriteString("app.Center(true)\n")
 	out.WriteString("app.Width(50)\n")
 	out.WriteString("app.Text(\"Welcome to Setup Wizard\")\n")
 	out.WriteString("app.Select(\"Choose an option\", \"Option A\", \"Option B\", \"Option C\")\n")
+	out.WriteString("app.MultiSelect(\"extras\", \"Choose extras\", \"Kitty\", \"Rofi\", \"Firefox\")\n")
 	out.WriteString("app.Input(\"Your name: \", \"e.g. Ada\")\n")
 	out.WriteString("app.Confirm(\"Continue?\")\n")
 	out.WriteString("app.Form(\"email\", \"Email\", \"bio\", \"Bio\")\n")

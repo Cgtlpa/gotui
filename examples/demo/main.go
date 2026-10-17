@@ -22,9 +22,11 @@ func main() {
 
 	app.Text("A Go TUI framework with the customizability of Bubble Tea " +
 		"and the simplicity of Huh.\n\nThis demo walks through input, " +
-		"select, confirm, and form components.")
+		"select, multi-select, confirm, and form components.")
 
 	app.Select("choice", "Pick your role", "Developer", "Designer", "Manager", "Other")
+	app.MultiSelect("extras", "Pick extras (space to toggle)",
+		"Kitty", "Rofi", "Fonts", "Wallpapers")
 	app.Input("name", "Your name: ", "e.g. Ada Lovelace")
 	app.Confirm("confirm", "Create account?")
 	app.Form("email", "Email", "bio", "Bio")
@@ -39,6 +41,7 @@ func main() {
 
 	fmt.Println("\n═══ Setup Complete ═══")
 	fmt.Printf("  Role:   %s\n", app.Value("choice"))
+	fmt.Printf("  Extras: %v\n", app.Value("extras"))
 	fmt.Printf("  Name:   %s\n", app.Value("name"))
 	fmt.Printf("  Email:  %s\n", app.Value("email"))
 	fmt.Printf("  Bio:    %s\n", app.Value("bio"))
