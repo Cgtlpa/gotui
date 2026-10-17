@@ -154,22 +154,16 @@ func (a *App) Run() error {
 		}
 	}
 
-	layout := Layout{
-		Width:     width,
-		Center:    a.center,
-		Height:    a.height,
-		TextScale: a.textScale,
-	}
-
 	for _, st := range a.steps {
 		wrapped := &appStep{
 			app:   a,
 			step:  st,
 			theme: th,
-			lay:   layout,
 		}
 
 		prog := NewProgram(wrapped)
+		prog.SetLayout(a.center, width, a.height)
+		prog.SetTextScale(a.textScale)
 		if err := prog.Run(); err != nil {
 			return err
 		}
@@ -198,7 +192,6 @@ type appStep struct {
 	app   *App
 	step  step
 	theme Theme
-	lay   Layout
 }
 
 func (s *appStep) Init() Cmd { return nil }
@@ -213,6 +206,7 @@ func (s *appStep) Update(msg Msg) (Model, Cmd) {
 
 // View renders the title followed by the component view, one line after another,
 // with no cursor positioning or diagonal offsets.
+// Centering and width padding are handled by Program.render().
 func (s *appStep) View() string {
 	th := s.theme
 	inner := s.step.model.View()
@@ -229,9 +223,5 @@ func (s *appStep) View() string {
 
 	b.WriteString(inner)
 
-	result := b.String()
-	if s.lay != (Layout{}) {
-		result = s.lay.Apply(result)
-	}
-	return result
+	return b.String()
 }

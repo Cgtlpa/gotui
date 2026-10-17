@@ -50,9 +50,13 @@ type Model interface {
 
 // Program runs a Model in a raw-mode terminal loop.
 type Program struct {
-	model Model
-	term  *Terminal
-	quit  bool
+	model     Model
+	term      *Terminal
+	quit      bool
+	center    bool
+	width     int
+	height    int
+	textScale int
 }
 
 // NewProgram creates a Program for the given model.
@@ -126,7 +130,7 @@ func (p *Program) tick(msg Msg) {
 	}
 }
 
-// Send feeds a message into the running program from outside.
+// Send feeds a message into the program from outside.
 func (p *Program) Send(msg Msg) {
 	p.tick(msg)
 }
@@ -136,14 +140,78 @@ func (p *Program) Quit() {
 	p.quit = true
 }
 
+// SetLayout configures centering and padding for rendering.
+func (p *Program) SetLayout(center bool, width, height int) {
+	p.center = center
+	p.width = width
+	p.height = height
+}
+
+// SetTextScale configures horizontal text scaling for rendering.
+func (p *Program) SetTextScale(scale int) {
+	p.textScale = scale
+}
+
 // render moves to home, clears the screen, and prints the current view.
 // In raw mode, \n alone does NOT return to column 0 — it only moves down.
 // We convert every \n to \r\n so each line starts at column 0 (no diagonal text).
+// Center=true centers each line horizontally within the terminal width.
 func (p *Program) render() {
 	view := p.model.View()
-	view = strings.ReplaceAll(view, "\n", "\r\n")
-	fmt.Fprint(p.term, "\r"+ansiCursorHome+ansiClearScreen+ansiClearScrollback)
-	fmt.Fprint(p.term, view)
+	lines := strings.Split(view, "\n")
+
+	// Apply text scale: repeat each visible character n times.
+	if p.textScale > 1 {
+		scaled := make([]string, len(lines))
+		for i, line := range lines {
+			scaled[i] = scaleLine(line, p.textScale)
+		}
+		lines = scaled
+	}
+
+	// Detect terminal width for centering.
+	termWidth := TerminalWidth()
+	if p.width > 0 {
+		termWidth = p.width
+	}
+
+	// Vertical centering: count blank lines to add at top.
+	topBlankLines := 0
+	if p.height > 0 && p.center {
+		contentLines := len(lines)
+		if contentLines < p.height {
+			topBlankLines = (p.height - contentLines) / 2
+		}
+	}
+
+	var b strings.Builder
+
+	// Move to home, clear screen.
+	b.WriteString("\r" + ansiCursorHome + ansiClearScreen + ansiClearScrollback)
+
+	// Add vertical centering blank lines.
+	for i := 0; i < topBlankLines; i++ {
+		b.WriteString("\r\n")
+	}
+
+	// Print each line, centered horizontally if requested.
+	for i, line := range lines {
+		if i > 0 || topBlankLines > 0 {
+			b.WriteString("\r\n")
+		}
+
+		if p.center && termWidth > 0 {
+			lineLen := visibleLen(line)
+			if lineLen < termWidth {
+				left := (termWidth - lineLen) / 2
+				b.WriteString(strings.Repeat(" ", left))
+			}
+		}
+
+		b.WriteString(line)
+	}
+
+	fmt.Fprint(p.term, b.String())
 }
 
 // Quit is a command that exits the program.
