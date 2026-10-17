@@ -1,11 +1,15 @@
 # gotui
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/Cgtlpa/gotui.svg)](https://pkg.go.dev/github.com/Cgtlpa/gotui)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/Cgtlpa/gotui)](https://golang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Cgtlpa/gotui/blob/master/LICENSE)
+
 A Go TUI (Terminal User Interface) framework with the **customizability of Bubble Tea** (charm.sh) and the **simplicity of Huh** (charm.sh).
 
 Built for beginners, powerful enough for experts. Zero external dependencies — pure Go standard library.
 
 ```
-Module path: gotui
+Module path: github.com/Cgtlpa/gotui
 Install:     go get github.com/Cgtlpa/gotui
 Go version:  1.16+
 ```
