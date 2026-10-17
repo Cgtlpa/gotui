@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/term"
 )
@@ -114,7 +115,9 @@ func (t *Terminal) ReadKey() (Key, error) {
 				first = append(first, rest...)
 			}
 		}
-		return decodeByte(first[0]), nil
+		// Decode the full UTF-8 sequence as a single rune.
+		r, _ := utf8.DecodeRuneInString(string(first))
+		return Key{Type: KeyRune, Rune: r}, nil
 	}
 
 	// ESC pressed: wait briefly for the rest of an escape sequence.
