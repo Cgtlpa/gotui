@@ -5,11 +5,12 @@ import (
 	"io"
 	"os"
 	"strings"
-	"syscall"
 	"time"
-	"unsafe"
+
+	"golang.org/x/term"
 )
 
+// ANSI escape sequences used for drawing and cursor control.
 const (
 	ansiCursorHide      = "\x1b[?25l"
 	ansiCursorShow      = "\x1b[?25h"
@@ -23,15 +24,21 @@ const (
 	ansiClearScrollback = "\x1b[3J"
 )
 
+// TerminalWidth returns the current terminal width in columns, or 0 if unknown.
+func TerminalWidth() int {
+	return terminalWidth()
+}
+
 // Terminal wraps stdin/stdout in raw mode and reads keypresses one at a time.
+// Works on Unix (Linux/macOS) and Windows (Windows 10+).
 // Any leftover bytes from partial escape sequences are buffered internally so
 // no keypress is ever skipped or duplicated.
 type Terminal struct {
-	in  *os.File
-	out io.Writer
-	old *syscall.Termios
-	fd  uintptr
-	buf []byte // leftover bytes from a partial escape sequence
+	in    *os.File
+	out   io.Writer
+	state *term.State
+	fd    uintptr
+	buf   []byte // leftover bytes from a partial escape sequence
 }
 
 // NewTerminal opens stdin/stdout and puts stdin into raw mode.
@@ -39,60 +46,27 @@ func NewTerminal() (*Terminal, error) {
 	in := os.Stdin
 	out := os.Stdout
 
-	old, err := makeRaw(in.Fd())
+	fd := int(in.Fd())
+	if !term.IsTerminal(fd) {
+		return nil, fmt.Errorf("stdin is not a terminal")
+	}
+
+	state, err := term.MakeRaw(fd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to enter raw mode: %w", err)
 	}
 
-	return &Terminal{in: in, out: out, old: old, fd: in.Fd()}, nil
+	return &Terminal{in: in, out: out, state: state, fd: uintptr(fd)}, nil
 }
 
 // Restore restores the original terminal state and shows the cursor again.
 func (t *Terminal) Restore() error {
-	if t.old == nil {
+	if t.state == nil {
 		return nil
 	}
-	_, _, errno := syscall.Syscall6(
-		syscall.SYS_IOCTL, t.fd, uintptr(syscall.TCSETS),
-		uintptr(unsafe.Pointer(t.old)), 0, 0, 0,
-	)
-	if errno != 0 {
-		return errno
-	}
+	err := term.Restore(int(t.fd), t.state)
 	fmt.Fprint(t.out, ansiCursorShow+ansiExitAltScreen)
-	return nil
-}
-
-// makeRaw puts the fd into raw mode: no echo, no line buffering, no signals.
-func makeRaw(fd uintptr) (*syscall.Termios, error) {
-	var old, new syscall.Termios
-
-	_, _, errno := syscall.Syscall6(
-		syscall.SYS_IOCTL, fd, uintptr(syscall.TCGETS),
-		uintptr(unsafe.Pointer(&old)), 0, 0, 0,
-	)
-	if errno != 0 {
-		return nil, errno
-	}
-
-	new = old
-	new.Lflag &^= syscall.ECHO | syscall.ICANON | syscall.ECHOE |
-		syscall.ECHOK | syscall.ECHONL | syscall.ISIG | syscall.IEXTEN
-	new.Iflag &^= syscall.IXON | syscall.IXOFF | syscall.IXANY |
-		syscall.IGNCR | syscall.INLCR | syscall.ICRNL
-	new.Oflag &^= syscall.OPOST
-	new.Cc[syscall.VMIN] = 1
-	new.Cc[syscall.VTIME] = 0
-
-	_, _, errno = syscall.Syscall6(
-		syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS),
-		uintptr(unsafe.Pointer(&new)), 0, 0, 0,
-	)
-	if errno != 0 {
-		return nil, errno
-	}
-
-	return &old, nil
+	return err
 }
 
 // Write sends bytes to the terminal output.
@@ -103,6 +77,11 @@ func (t *Terminal) Write(b []byte) (int, error) {
 // WriteString sends a string to the terminal output.
 func (t *Terminal) WriteString(s string) (int, error) {
 	return t.out.Write([]byte(s))
+}
+
+// Width returns the terminal width in columns, or 0 if unknown.
+func (t *Terminal) Width() int {
+	return terminalWidth()
 }
 
 // ReadKey reads exactly one keypress. It first drains any buffered bytes,
@@ -265,21 +244,4 @@ func delAfter(s string, idx int) string {
 	}
 	n := runeNext(s, idx)
 	return s[:idx] + s[n:]
-}
-
-// TerminalWidth returns the current terminal width in columns, or 0 if it
-// cannot be determined. It uses the TIOCGWINSZ ioctl on stdin, stdout, or
-// stderr, trying each in turn.
-func TerminalWidth() int {
-	var dims [4]uint16
-	for _, fd := range []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()} {
-		_, _, errno := syscall.Syscall6(
-			syscall.SYS_IOCTL, fd, uintptr(syscall.TIOCGWINSZ),
-			uintptr(unsafe.Pointer(&dims)), 0, 0, 0,
-		)
-		if errno == 0 && dims[1] > 0 {
-			return int(dims[1]) // columns
-		}
-	}
-	return 0
 }

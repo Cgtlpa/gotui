@@ -561,9 +561,8 @@ Also included: `go run ./cmd/preview` — renders every component to stdout with
 
 ## 15. Known Limitations
 
-- **Windows:** Current raw-mode implementation targets Unix-like systems (Linux/macOS) via `syscall` termios. Windows support is a contribution opportunity.
 - **Terminal resize:** Not handled mid-session. Resize before starting.
-- **FontSize:** `TextScale(n)` repeats characters horizontally — it's a visual effect, not real font scaling (terminals can't change font size).
+- **TextScale:** `TextScale(n)` repeats characters horizontally — it's a visual effect, not real font scaling (terminals can't change font size).
 - **No wrapping:** Long text is not wrapped or clipped — it renders as-is.
 
 ---

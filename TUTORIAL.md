@@ -679,7 +679,6 @@ Both `Esc` and `Ctrl+C` make `Run()` return `gotui.ErrCancelled`.
 
 ## 13. Known limitations
 
-- **Windows:** gotui currently targets Linux and macOS. Windows support would be a welcome contribution.
 - **Resizing:** Changing the terminal size while the app is running isn't handled. Resize before you start.
 - **Font size:** `TextScale(n)` stretches characters horizontally. It does not change the real font size, which terminals don't allow.
 - **No wrapping:** Long text is neither wrapped nor clipped.

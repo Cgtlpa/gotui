@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"syscall"
 )
 
 // Msg is any message fed into a Model's Update.
@@ -74,7 +73,7 @@ func (p *Program) Run() error {
 	defer func() { _ = p.term.Restore() }()
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT)
+	signal.Notify(sigChan, os.Interrupt)
 	go func() {
 		<-sigChan
 		p.Quit()
